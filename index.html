@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>扑克牌</title>
+</head>
+<style>
+    *{
+        margin:0;
+        padding:0;
+        list-style: none;
+    }
+    body,html{
+        width:100%;
+        height:100%;
+        overflow:hidden;
+    }
+    .box{
+        width:1000px;
+        height:100%;
+        margin:0 auto;
+        position:relative;
+        background-image:url("img/bg.png");
+        background-position: center;
+        background-size:cover;
+    }
+    .poke{
+        width:90px;
+        height:130px;
+        position:absolute;
+        top:0;
+        left:300px;
+        background-size:90px 130px;
+        background-position: center;
+        opacity: 0;
+        box-sizing: border-box;
+        border:3px solid rgba(0,0,0,0);
+        border-radius: 3px;
+    }
+    button{
+        width:100px;
+        height:50px;
+        border-radius: 5px;
+        background:indianred;
+        position: absolute;
+        left:500px;
+        border:none;
+        z-index:999;
+        font-size: 30px;
+    }
+    button:nth-child(1){
+        top:570px;
+    }
+    button:nth-child(2){
+        top:640px;
+        background:#00C0A5;
+    }
+    .active{
+        border:3px solid #0AA6E8;
+    }
+    .cheng{
+        width:500px;
+        height: 150px;
+        background: #d2d2d2;
+        border-radius: 10px;
+        box-shadow: 0 0 10px #000000;
+        position: absolute;
+        top:0;
+        bottom:0;
+        left:0;
+        right:0;
+        margin:auto;
+        font-size: 50px;
+        text-align: center;
+        line-height: 150px;
+        color:#bd2c00;
+        font-weight: 600;
+        z-index: 999;
+        display: none;
+    }
+</style>
+<body>
+    <div class="box">
+        <button>——></button>
+        <button><——</button>
+        <div class="cheng"> 游戏完成</div>
+    </div>
+
+</body>
+</html>
+<script src="js/jquery/jquery-3.2.1.js"></script>
+<script>
+    $(function(){
+        $(document).mousedown(false);
+        let puke = ['h','m','f','t'];
+        let arr = {};
+        let pai = [];
+
+
+        for(let i=0;i<52;i++){
+            let huase = puke[Math.floor(Math.random()*4)];
+            let shu = Math.floor(Math.random()*13+1);
+
+            //判断是否重复
+            while(arr[huase+"_"+shu]){
+                 huase = puke[Math.floor(Math.random()*4)];
+                 shu = Math.floor(Math.random()*13+1);
+             }
+             arr[huase+"_"+shu]=true;
+            pai.push({huase,shu});
+        }
+
+        //记录第几张牌
+        let index = 0;
+
+        //行
+        for(let i=0;i<7;i++){
+            //列
+            for(let j=0;j<=i;j++){
+                let item = pai[index];
+                //item的形式：item={huase：'h';shu:5}
+                index++;
+                //发一张牌数加
+                //地址
+                let src = `url(img/${item.huase}${item.shu}.png)`;
+
+                //插入到页面中
+                $('<div>').addClass('poke')
+                    .css({backgroundImage:src})
+                    .data('num',item.shu)
+                    .prop('id',i+'_'+j)
+                    .delay(50*index)
+                    .animate({
+                        top:70*i,left:500-50*i+100*j,opacity:1
+                    })
+                    .appendTo('.box')
+
+            }
+        }
+        let zhi = index;
+        for(;index<pai.length;index++){
+
+            let item = pai[index];
+            //item的形式：item={huase：'h';shu:5}
+            //发一张牌数加
+            //地址
+            let src = `url(img/${item.huase}${item.shu}.png)`;
+
+            //插入到页面中
+            $('<div>').addClass('poke right')
+                .data('num',item.shu)
+                .delay(50*index)
+                .animate({
+                    top:570,left:350,opacity:1
+                })
+                .css({backgroundImage:src})
+                .appendTo('.box')
+        }
+
+        let first = null;
+        let chengji = 0;
+        //点击出效果
+        $('.poke').click(function(){
+            let bj = $(this).prop('id');
+            let pre = bj.split('_');
+            //获取了数组[5,4]的形式
+            //判断[6,4][6,5]是否存在——若存在则不能点击；
+            let bj1 = `#${parseInt(pre[0])+1}_${parseInt(pre[1])}`;
+            let bj2 = `#${parseInt(pre[0])+1}_${parseInt(pre[1])+1}`;
+            if($(bj1).length==0&&$(bj2).length==0){
+                $(this).toggleClass('active')
+                if($(this).hasClass('active')){
+                    $(this).animate({top:'-=20'})
+                }else{
+                    $(this).animate({top:'+=20'})
+                }
+            }else{return;}
+
+            //点击相加等于13消失:用shu——pai.shu
+
+            if(!first){
+                first = this;
+                let sum = $(first).data('num');
+                if(sum == 13){
+                    $('.active').animate({top:0,left:800},function(){
+                        $(this).remove();
+                    })
+                    first = null;
+                    chengji++;
+                }
+
+            }else{
+                let sum = $(first).data('num') + $(this).data('num');
+                if(sum == 13){
+                    $('.active').animate({top:0,left:800},function(){
+                        $(this).remove();
+                    })
+                    chengji++;
+                    chengji++;
+                }else{
+                    $('.active').animate({top:'+=20'}).removeClass('active')
+                }
+                first = null;
+            }
+            console.log(chengji)
+            if(chengji == 52){
+                $('.cheng').fadeOut();
+            }
+
+        })
+
+
+        let z =1
+        $('button').eq(0).on('click',function(){
+            //点一下最上面一张像右
+            z++
+            $('.right:last')
+                .css({zIndex:z})
+                .animate({top:570,left:650})
+                .removeClass('right')
+                .addClass('left')
+
+        })
+
+
+        $('button').eq(1).on('click',function(){
+            //所有的放到左边
+
+            for(let i=$('.left').length-1;i>=0;i--){
+                z++;
+                $($('.left')[i])
+                    .delay(200*i)
+                    .animate({top:570,left:350},function(){
+                        $(this).css({zIndex:z})
+                    })
+                    .addClass('right')
+                    .removeClass('left')
+            }
+
+
+        })
+
+
+
+    })
+</script>
